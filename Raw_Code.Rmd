@@ -1,0 +1,128 @@
+---
+title: "Liu Lab Coding Assessment"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1) Merging and Reading .maf files into "dfci" 
+```{r}
+library(maftools)   #For analying .maf files
+library(readr)      #Easy to use write.tsv() function available
+library(here)       #Set relative paths to current wd instead of retyping long direct path names
+basePath <- here("vanallen-assessment")  
+mafsPath <- paste(basePath, "mafs", sep = "/")
+mafFiles <- list.files(mafsPath)
+mafFilesPaths <- paste(mafsPath, mafFiles, sep = "/")
+#Merges .mafs and creates a sample_id column
+mergedMaf <- maftools:::merge_mafs(mafs = mafFilesPaths, MAFobj = FALSE) 
+#Path to merged .maf file
+dfci.maf <- paste(basePath, "somatic.snvs.maf", sep = "/") 
+write_tsv(mergedMaf, path = dfci.maf) 
+#Path to clinical information
+dfci.clin <- paste(basePath, "sample-information.tsv", sep = "/") 
+dfci = read.maf(maf = dfci.maf, clinicalData = dfci.clin, removeDuplicatedVariants = FALSE) #Retaining all variants
+```
+
+
+2) Subset for mutations that are not of the Variant Classification “Silent”. 
+```{r}
+nonSyn_dfci <- read.maf(maf = subsetMaf(dfci, query = "Variant_Classification != 'Silent'"), clinicalData = dfci.clin, removeDuplicatedVariants = FALSE)
+```
+
+
+3) Find the 15 most common mutations
+```{r}
+#Source = https://rdrr.io/bioc/maftools/src/R/summarizeMaf.R
+#Top 20 FLAGS - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4267152/
+geneCloud(nonSyn_dfci, top = 15)
+flags = c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", "MUC5B",
+          "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", "LAMA5", "AHNAK",
+          "HMCN1", "USH2A", "DNAH11", "MACF1", "MUC17")
+top15 <- nonSyn_dfci@gene.summary[1:15, "Hugo_Symbol"][[1]]
+cat("Top 15 commonly mutated genes: ", top15, "\n")
+cat("Possible flags in top 15 commonly mutated genes: ",  top15[flags %in% top15], "\n")
+top15MuInfo <- cbind(nonSyn_dfci@data$Hugo_Symbol[which(nonSyn_dfci@data$Hugo_Symbol %in% top15)], nonSyn_dfci@data$Protein_Change[which(nonSyn_dfci@data$Hugo_Symbol %in% top15)])
+colnames(top15MuInfo) <- c("Hugo_Symbol", "Protein_Change")
+cat("Top 15 common mutations with associated protein changes (First 10)\n")
+head(top15MuInfo, 10)
+```
+
+4) Perform a statistical test to explore if any mutated genes are enriched in patients who either responded or not
+```{r}
+#Null Hypothesis: Genes acquire mutations equally likely in both responders and non responders
+enrichmentRes <- clinicalEnrichment(nonSyn_dfci, clinicalFeature = "Response")
+#Plots only significantly enriched mutated genes
+plotEnrichmentResults(enrichmentRes, pVal = 0.05, cols = NULL,
+                      annoFontSize = 0.9, geneFontSize = 0.8, legendFontSize = 0.8,
+                      showTitle = FALSE)
+title (main = "Gene-Responsiveness Associations", ylab = "Sample Fraction associated with Responses", xlab = "Enriched Genes", line = 2.2)
+#Bars are annotated with the ratio of mutated samples to total samples
+
+
+```
+
+
+5) Create a scatter plot of genes with the number of mutated patients and your results from question 4. Can the axes be scaled or transformed in any way to improve readability? If so, recreate the plot using your suggestion(s).  
+```{r}
+enrichedGenes <- enrichmentRes$groupwise_comparision[p_value < 0.05, Hugo_Symbol]
+mutatedPatients <- nonSyn_dfci@gene.summary$MutatedSamples[which(nonSyn_dfci@gene.summary$Hugo_Symbol %in% enrichedGenes)]
+rawCount <- data.frame(enrichedGenes, mutatedPatients)
+library(ggplot2)
+ggplot(rawCount, aes(x=mutatedPatients, y=enrichedGenes)) + geom_dotplot(stackdir = "center", binaxis = "y", method="histodot", binwidth = 0.5) + ggtitle("Raw Mutated Patient Count Vs Enriched Genes") + labs(x = "Raw Mutated Patient Count", y = "Enriched Genes")
+```
+Scaled Data
+```{r}
+totalMutations <- nonSyn_dfci@gene.summary$total[nonSyn_dfci@gene.summary$Hugo_Symbol %in% enrichedGenes] #Do not consider Tumor_Sample_Bracodes as same patient sample could be run with different barcodes
+# A single patient can have more than one mutation. 
+muFreq <- totalMutations/mutatedPatients
+muFreqTable <- data.frame(enrichedGenes, muFreq)
+ggplot(muFreqTable, aes(x=muFreq, y=enrichedGenes)) + geom_dotplot(stackdir = "center", binaxis = "y", method="histodot", binwidth = 0.5) + ggtitle("Mutation Frequency Vs Enriched Genes") + labs(x = "Mutation Frequency", y = "Enriched Genes")
+play <- data.frame(patientID = nonSyn_dfci@data$Tumor_Sample_Barcode[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes], enrichedGene = nonSyn_dfci@data$Hugo_Symbol[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes], response = nonSyn_dfci@clinical.data$Response[nonSyn_dfci@data$Tumor_Sample_Barcode[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes]])
+contigencytable <- table(play$enrichedGene, play$response)
+plot(contigencytable[,1]/totalMutations, type = "p", pch = 3, col = "red", main = "Scaled Data", xlab = "Enriched Genes", ylab = "Mutation Frequency", xaxt='n')
+points(contigencytable[,2]/totalMutations, pch = 6, col = "blue")
+axis(1, at = play$enrichedGene, labels = play$enrichedGene, cex.axis=0.6)
+legend("topright", legend=c("Non-Responder", "Responder"), col=c("red", "blue"), lty=1:2, cex=0.8)
+```
+
+
+Detailed Oncoplot
+```{r}
+cat("Following oncoplot provides a more detailed description of the mutations in the enriched genes in each patient\n")
+oncostrip(nonSyn_dfci, genes = enrichedGenes)
+```
+
+6) How many samples are wild-type versus mutant with respect to the most significantly enriched gene from Question 4?
+Plot the number of nonsynonymous mutations per megabase in the mutant vs. wild-type samples. Is there a significant difference in the number of mutations between the two groups?
+```{r}
+cat("Most significantly enriched gene: ",enrichedGenes[1],"\n")
+totalSamples <- nonSyn_dfci@clinical.data$Tumor_Sample_Barcode
+mutantSamples <- nonSyn_dfci@data$Tumor_Sample_Barcode[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes[1]]
+wtSamples <- setdiff(totalSamples, mutantSamples)
+cat ("Number of", enrichedGenes[1],"mutant samples: ", length(mutantSamples), "\n")
+cat ("Number of ",enrichedGenes[1],"wild-type samples: ", length(wtSamples) )
+
+mutantBurden <- nonSyn_dfci@clinical.data$Nonsynonymous_mutations_per_Mb[nonSyn_dfci@clinical.data$Tumor_Sample_Barcode %in% mutantSamples]
+mutantBurden <- as.numeric(as.character(mutantBurden)) #Factor to number conversion
+wtBurden <- nonSyn_dfci@clinical.data$Nonsynonymous_mutations_per_Mb[nonSyn_dfci@clinical.data$Tumor_Sample_Barcode %in% wtSamples]
+wtBurden <- as.numeric(as.character(wtBurden))
+burden = c(mutantBurden,wtBurden)
+status = c(rep("Mutant", length(mutantBurden)), rep("Wt", length(wtBurden)))
+burdenData <- data.frame(status, burden)
+
+#Test homoscedasticity before using t-test assuming homogeneous variances
+var.test(burdenData$burden~burdenData$status)
+#P value is greater than 0.5, meaning that we can assume that the variances of both groups are homogenous
+t.test(burdenData$burden~burdenData$status,var.equal = TRUE, alternative = "two.sided")
+#Mean nonsynonymous mutations per megabase in the mutant group is significantly different from that of the wild-type group
+t.test(burdenData$burden~burdenData$status,var.equal = TRUE, alternative = "greater")
+#Mean nonsynonymous mutations per megabase in the mutant group is significantly higher than that of the wild-type group
+library(ggpubr)
+ggboxplot(burdenData, x = "status", y ="burden",color = "status", palette = c("#00AFBB", "#E7B800"), order = c("Mutant", "Wt"), ylab = "Mutation Burden", xlab = "Patient Status")
+```
+
