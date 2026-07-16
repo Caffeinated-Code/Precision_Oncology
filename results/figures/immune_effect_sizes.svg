@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="317" viewBox="0 0 860 317">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="310" y="28" font-family="Arial" font-size="18" font-weight="700">Immune-context effect sizes</text>
+<line x1="500" y1="50" x2="500" y2="272" stroke="#555"/>
+<text x="432" y="301" font-family="Arial" font-size="12">No benefit higher</text>
+<text x="514" y="301" font-family="Arial" font-size="12">Benefit higher</text>
+<text x="12" y="76" font-family="Arial" font-size="13">CD8 T cells</text>
+<line x1="500" y1="68" x2="590.2" y2="68" stroke="#356f8f" stroke-width="8" stroke-linecap="round"/>
+<text x="600.2" y="73" font-family="Arial" font-size="12">0.361</text>
+<text x="12" y="110" font-family="Arial" font-size="13">Activated CD4 memory T cells</text>
+<line x1="500" y1="102" x2="568.0" y2="102" stroke="#356f8f" stroke-width="8" stroke-linecap="round"/>
+<text x="578.0" y="107" font-family="Arial" font-size="12">0.272</text>
+<text x="12" y="144" font-family="Arial" font-size="13">Activated NK cells</text>
+<line x1="500" y1="136" x2="564.3" y2="136" stroke="#356f8f" stroke-width="8" stroke-linecap="round"/>
+<text x="574.3" y="141" font-family="Arial" font-size="12">0.257</text>
+<text x="12" y="178" font-family="Arial" font-size="13">M1 macrophages</text>
+<line x1="500" y1="170" x2="550.3" y2="170" stroke="#356f8f" stroke-width="8" stroke-linecap="round"/>
+<text x="560.3" y="175" font-family="Arial" font-size="12">0.201</text>
+<text x="12" y="212" font-family="Arial" font-size="13">M2 macrophages</text>
+<line x1="500" y1="204" x2="544.4" y2="204" stroke="#356f8f" stroke-width="8" stroke-linecap="round"/>
+<text x="554.4" y="209" font-family="Arial" font-size="12">0.178</text>
+<text x="12" y="246" font-family="Arial" font-size="13">Regulatory T cells</text>
+<line x1="500" y1="238" x2="486.7" y2="238" stroke="#9f5c43" stroke-width="8" stroke-linecap="round"/>
+<text x="438.7" y="243" font-family="Arial" font-size="12">-0.053</text>
+</svg>

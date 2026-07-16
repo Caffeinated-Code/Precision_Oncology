@@ -1,0 +1,5 @@
+feature,n_dcb,n_no_dcb,median_dcb,median_no_dcb,rank_biserial_dcb_vs_no_dcb
+Mutation count,29,76,314.0,217.5,0.20735027223230484
+Nonsynonymous mutation load,29,76,321.0,223.0,0.20644283121597096
+TMB nonsynonymous,29,76,10.5,7.300000000000001,0.2068965517241379
+Neoantigen load,29,76,238.0,122.5,0.19646098003629775

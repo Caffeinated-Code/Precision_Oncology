@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="553" viewBox="0 0 860 553">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="165" y="28" font-family="Arial" font-size="18" font-weight="700">Top recurrent nonsynonymous mutations</text>
+<text x="12" y="77" font-family="Arial" font-size="13">TTN</text>
+<rect x="165" y="58" width="610.0" height="20" fill="#356f8f"/>
+<text x="783.0" y="73" font-family="Arial" font-size="12">0.636</text>
+<text x="12" y="107" font-family="Arial" font-size="13">MUC16</text>
+<rect x="165" y="88" width="583.9" height="20" fill="#356f8f"/>
+<text x="756.8571428571429" y="103" font-family="Arial" font-size="12">0.609</text>
+<text x="12" y="137" font-family="Arial" font-size="13">DNAH5</text>
+<rect x="165" y="118" width="366.0" height="20" fill="#356f8f"/>
+<text x="539.0" y="133" font-family="Arial" font-size="12">0.382</text>
+<text x="12" y="167" font-family="Arial" font-size="13">BRAF</text>
+<rect x="165" y="148" width="339.9" height="20" fill="#356f8f"/>
+<text x="512.8571428571429" y="163" font-family="Arial" font-size="12">0.355</text>
+<text x="12" y="197" font-family="Arial" font-size="13">PCLO</text>
+<rect x="165" y="178" width="339.9" height="20" fill="#356f8f"/>
+<text x="512.8571428571429" y="193" font-family="Arial" font-size="12">0.355</text>
+<text x="12" y="227" font-family="Arial" font-size="13">USH2A</text>
+<rect x="165" y="208" width="322.4" height="20" fill="#356f8f"/>
+<text x="495.42857142857144" y="223" font-family="Arial" font-size="12">0.336</text>
+<text x="12" y="257" font-family="Arial" font-size="13">NRAS</text>
+<rect x="165" y="238" width="296.3" height="20" fill="#356f8f"/>
+<text x="469.2857142857143" y="253" font-family="Arial" font-size="12">0.309</text>
+<text x="12" y="287" font-family="Arial" font-size="13">ANK3</text>
+<rect x="165" y="268" width="287.6" height="20" fill="#356f8f"/>
+<text x="460.57142857142856" y="283" font-family="Arial" font-size="12">0.300</text>
+<text x="12" y="317" font-family="Arial" font-size="13">CSMD1</text>
+<rect x="165" y="298" width="278.9" height="20" fill="#356f8f"/>
+<text x="451.85714285714283" y="313" font-family="Arial" font-size="12">0.291</text>
+<text x="12" y="347" font-family="Arial" font-size="13">LRP1B</text>
+<rect x="165" y="328" width="278.9" height="20" fill="#356f8f"/>
+<text x="451.85714285714283" y="343" font-family="Arial" font-size="12">0.291</text>
+<text x="12" y="377" font-family="Arial" font-size="13">DNAH3</text>
+<rect x="165" y="358" width="270.1" height="20" fill="#356f8f"/>
+<text x="443.1428571428571" y="373" font-family="Arial" font-size="12">0.282</text>
+<text x="12" y="407" font-family="Arial" font-size="13">ADGRV1</text>
+<rect x="165" y="388" width="261.4" height="20" fill="#356f8f"/>
+<text x="434.4285714285714" y="403" font-family="Arial" font-size="12">0.273</text>
+<text x="12" y="437" font-family="Arial" font-size="13">CSMD3</text>
+<rect x="165" y="418" width="261.4" height="20" fill="#356f8f"/>
+<text x="434.4285714285714" y="433" font-family="Arial" font-size="12">0.273</text>
+<text x="12" y="467" font-family="Arial" font-size="13">PKHD1L1</text>
+<rect x="165" y="448" width="261.4" height="20" fill="#356f8f"/>
+<text x="434.4285714285714" y="463" font-family="Arial" font-size="12">0.273</text>
+<text x="12" y="497" font-family="Arial" font-size="13">XIRP2</text>
+<rect x="165" y="478" width="261.4" height="20" fill="#356f8f"/>
+<text x="434.4285714285714" y="493" font-family="Arial" font-size="12">0.273</text>
+<text x="165" y="541" font-family="Arial" font-size="12" fill="#555">Fraction of sequenced samples</text>
+</svg>

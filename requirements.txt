@@ -1,0 +1,2 @@
+# Core analysis uses only the Python standard library.
+# Optional packages may be added later for richer modeling/visualization.

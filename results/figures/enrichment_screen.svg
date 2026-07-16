@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="860" height="520" viewBox="0 0 860 520">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="70" y="28" font-family="Arial" font-size="18" font-weight="700">Gene-level response enrichment screen</text>
+<line x1="70" y1="450" x2="825" y2="450" stroke="#333"/>
+<line x1="70" y1="50" x2="70" y2="450" stroke="#333"/>
+<line x1="70" x2="825" y1="302.5718742914137" y2="302.5718742914137" stroke="#999" stroke-dasharray="5,5"/>
+<circle cx="329.7" cy="50.0" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="43.0" font-family="Arial" font-size="11">TECPR2</text>
+<circle cx="212.9" cy="120.2" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="219.9" y="113.2" font-family="Arial" font-size="11">FSTL4</text>
+<circle cx="212.9" cy="120.2" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="219.9" y="113.2" font-family="Arial" font-size="11">OR5D14</text>
+<circle cx="212.9" cy="120.2" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="219.9" y="113.2" font-family="Arial" font-size="11">SETD3</text>
+<circle cx="589.4" cy="132.9" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="125.9" font-family="Arial" font-size="11">MICAL3</text>
+<circle cx="589.4" cy="132.9" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="125.9" font-family="Arial" font-size="11">SYNPO2</text>
+<circle cx="656.9" cy="181.3" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="663.9" y="174.3" font-family="Arial" font-size="11">PLXNA4</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">C11ORF40</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">CAGE1</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">DDI1</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">KAT6B</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">PARP8</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">RAD54L2</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">RB1CC1</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">RBSN</text>
+<circle cx="70.0" cy="188.9" r="5" fill="#6d8fb3" opacity="0.82"/>
+<text x="77.0" y="181.9" font-family="Arial" font-size="11">SLC12A2</text>
+<circle cx="514.0" cy="192.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="521.0" y="185.1" font-family="Arial" font-size="11">KRT76</text>
+<circle cx="514.0" cy="192.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="521.0" y="185.1" font-family="Arial" font-size="11">SERPINB3</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">ARSJ</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">BRIP1</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">NOP9</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">TRPC5</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">TSPOAP1</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">WDR70</text>
+<circle cx="329.7" cy="197.4" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="336.7" y="190.4" font-family="Arial" font-size="11">ZBTB4</text>
+<circle cx="825.0" cy="203.7" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="832.0" y="196.7" font-family="Arial" font-size="11">NOTCH4</text>
+<circle cx="718.0" cy="220.2" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="725.0" y="213.2" font-family="Arial" font-size="11">CRYBG1</text>
+<circle cx="718.0" cy="220.2" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="725.0" y="213.2" font-family="Arial" font-size="11">SYNE2</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">CNTN5</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">DSG2</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">LAMB3</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">LRBA</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">MAP2K1</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">MCF2</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">SEZ6L</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">USP34</text>
+<circle cx="589.4" cy="235.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="596.4" y="228.1" font-family="Arial" font-size="11">WDR72</text>
+<circle cx="428.5" cy="248.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="435.5" y="241.1" font-family="Arial" font-size="11">ARID1B</text>
+<circle cx="428.5" cy="248.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="435.5" y="241.1" font-family="Arial" font-size="11">DEPDC1</text>
+<circle cx="428.5" cy="248.1" r="5" fill="#b4473d" opacity="0.82"/>
+<text x="435.5" y="241.1" font-family="Arial" font-size="11">DMXL2</text>
+<text x="382.5" y="498" font-family="Arial" font-size="12">log2(mutated samples)</text>
+<text x="12" y="250.0" font-family="Arial" font-size="12" transform="rotate(-90 12,250.0)">-log10 p-value</text>
+</svg>

@@ -1,153 +1,148 @@
-# Precision Oncology Mutation Enrichment
+# Precision Oncology: Immunotherapy Response Profiling
 
-Exploratory WES/MAF analysis for identifying somatic mutation features associated with drug response.
+Reproducible clinical-genomic analysis of a public metastatic melanoma cohort treated with CTLA-4 blockade.
 
-This repository presents a compact precision-oncology case study: given tumor mutation calls and binary response annotations, build a defensible mutation-enrichment workflow that separates plausible biomarker signals from artifacts driven by sparse events, large genes, and tumor mutational burden.
+The project asks a practical precision-oncology question:
 
-## Executive Takeaway
+> Can public tumor genomic and immune-context data distinguish patients with durable clinical benefit from those with progressive disease after immune checkpoint blockade?
 
-The legacy rendered analysis in this repository reported `ERCC2` as the top response-associated candidate in a 50-sample cohort split evenly between responders and non-responders.
+The answer is intentionally nuanced: the cohort supports an immunogenicity pattern involving higher mutation burden, neoantigen load, and immune-context signals in durable-benefit samples, but it does **not** support claiming a validated single-gene response biomarker from this analysis alone.
 
-The updated workflow does **not** treat that as a validated biomarker. It reframes the result as a candidate association that must be evaluated against:
+## Why This Project Matters
 
-- event frequency and sparse-count instability
-- multiple hypothesis testing
-- large-gene recurrence artifacts
-- tumor mutational burden as a possible confounder
-- independent biological and clinical validation
+Precision oncology is not just variant annotation. A useful translational analysis has to connect molecular features to a clinical question while protecting against artifacts.
 
-That distinction is the point of the project: the analysis is designed to look like something an oncology bioinformatics team could review, challenge, and extend.
+This project demonstrates that workflow on a real public cohort:
 
-## Scientific Question
-
-> Are any nonsynonymous somatic mutations enriched in responders compared with non-responders, and do those associations remain credible after accounting for mutation frequency, multiple testing, and mutation burden?
-
-## Why This Matters
-
-Small precision-oncology cohorts are common in translational settings. They are also statistically fragile. A mutation-response association can be distorted by:
-
-- one or two low-frequency events
-- genes that recur because they are large or mutable
-- unequal tumor mutational burden across response groups
-- variant-level counting instead of sample-level mutation presence
-- unadjusted p-values across thousands of genes
-
-This workflow makes those risks explicit.
+- clinical endpoint definition
+- public cohort ingestion through cBioPortal
+- somatic mutation recurrence analysis
+- response-enrichment testing
+- multiple-testing correction
+- low-frequency mutation triage
+- tumor mutational burden and neoantigen context
+- immune microenvironment estimates
+- cautious biological interpretation
 
 ```mermaid
 flowchart LR
-    A["Somatic MAF files"] --> B["Nonsynonymous variants"]
-    B --> C["Sample x gene mutation matrix"]
-    C --> D["Responder vs non-responder Fisher tests"]
-    D --> E["Frequency tiers + FDR"]
-    E --> F["TMB comparison"]
-    F --> G["Burden-adjusted sensitivity model"]
-    G --> H["Candidate biomarker interpretation"]
+    A["Public cBioPortal cohort"] --> B["Clinical response labels"]
+    A --> C["Somatic mutations"]
+    A --> D["TMB, neoantigen, immune estimates"]
+    C --> E["Gene-level enrichment"]
+    D --> F["Burden and immune context"]
+    E --> G["Candidate review"]
+    F --> G
+    G --> H["Precision-oncology interpretation"]
 ```
 
-## What Was Improved
+## Cohort
 
-The current analysis source in [analysis/precision_oncology_enrichment.Rmd](analysis/precision_oncology_enrichment.Rmd) implements a more reviewable workflow:
+- Study: **Metastatic Melanoma (DFCI, Science 2015)**
+- cBioPortal ID: `skcm_dfci_2015`
+- Citation: Van Allen et al., Science 2015
+- PMID: `26359337`
+- Data portal: https://www.cbioportal.org/study/summary?id=skcm_dfci_2015
+- Treatment context: CTLA-4 blockade
+- Sequenced samples reported by cBioPortal: 110
 
-- sample-level gene mutation presence, rather than raw variant counts alone
-- Fisher exact tests for small responder/non-responder contingency tables
-- Benjamini-Hochberg q-values for multiple testing
-- separate reporting for primary-screen, low-frequency, and singleton events
-- corrected large-gene/FLAGS annotation logic
-- nonparametric mutation-burden comparison
-- logistic sensitivity model including mutation burden
-- explicit assumptions, input checks, and cautious interpretation
+## Headline Findings
 
-## Current Legacy Result
+The pipeline regenerated the analysis from public cBioPortal API data.
 
-The archived rendered output from the original assessment reported:
+- Binary response analysis samples: 105
+- Durable clinical benefit: 29
+- No durable benefit: 76
+- Indeterminate response labels excluded: 5
+- Mutation records fetched: 53,013
+- No gene-level association passed FDR <= 0.10
+- Durable-benefit samples had higher median mutation count, nonsynonymous TMB, and neoantigen load
+- RNA-derived immune estimates were available in a subset and trended toward higher CD8 T-cell and activated lymphocyte context in durable-benefit samples
 
-| Quantity | Reported value |
-|---|---:|
-| Samples | 50 |
-| Responders | 25 |
-| Non-responders | 25 |
-| Top candidate | `ERCC2` |
-| `ERCC2` mutant samples | 9 |
-| `ERCC2` wild-type samples | 41 |
-| Mean nonsynonymous mutations/Mb, `ERCC2` mutant | 10.67 |
-| Mean nonsynonymous mutations/Mb, `ERCC2` wild-type | 5.05 |
+The strongest conclusion is not "gene X predicts response." The stronger conclusion is that a review-grade analysis should evaluate gene signals in the context of tumor immunogenicity, sparse events, and multiple testing.
 
-Interpretation: `ERCC2` is biologically plausible because nucleotide excision repair alterations can affect DNA damage biology and mutation burden. In this cohort, however, the result should be treated as hypothesis-generating until it is reproduced with the updated workflow and validated externally.
+## Results
+
+Main report:
+
+- [Precision Oncology Report](results/precision_oncology_report.md)
+
+Key tables:
+
+- [Gene response enrichment](results/tables/gene_response_enrichment.csv)
+- [Top recurrent genes](results/tables/top_recurrent_genes.csv)
+- [Burden summary](results/tables/burden_summary.csv)
+- [Immune context summary](results/tables/immune_context_summary.csv)
+
+Figures:
+
+![Top recurrent genes](results/figures/top_recurrent_genes.svg)
+
+![Gene response enrichment](results/figures/enrichment_screen.svg)
+
+![Burden effect sizes](results/figures/burden_effect_sizes.svg)
+
+![Immune effect sizes](results/figures/immune_effect_sizes.svg)
 
 ## Repository Layout
 
 ```text
 .
 ├── README.md
-├── analysis/
-│   └── precision_oncology_enrichment.Rmd
-└── archive/
-    └── legacy-output/
-        ├── Knitted_Report.html
-        └── README.pdf
+├── docs/
+│   ├── data_source.md
+│   ├── interpretation_guide.md
+│   └── methods.md
+├── src/
+│   └── analyze_van_allen_melanoma.py
+├── data/
+│   └── derived/
+│       ├── cohort_summary.csv
+│       └── nonsynonymous_mutations.csv
+└── results/
+    ├── precision_oncology_report.md
+    ├── figures/
+    └── tables/
 ```
 
-The assessment data are not committed. The analysis expects:
+## Run The Analysis
 
-```text
-vanallen-assessment/
-├── mafs/
-│   └── *.maf
-└── sample-information.tsv
+The core pipeline uses only the Python standard library.
+
+```bash
+python3 src/analyze_van_allen_melanoma.py
 ```
 
-Required clinical columns:
+The script downloads public data from cBioPortal and regenerates:
 
-- `Tumor_Sample_Barcode`
-- `Response`
-- `Nonsynonymous_mutations_per_Mb`
+- derived cohort and mutation tables
+- response-enrichment results
+- burden and immune-context summaries
+- SVG figures
+- Markdown report
 
-Required MAF columns:
+## Biological Interpretation
 
-- `Hugo_Symbol`
-- `Tumor_Sample_Barcode`
-- `Variant_Classification`
+The analysis is strongest when read as a translational profiling workflow:
 
-## Reproduce The Analysis
+- High mutation and neoantigen burden can increase the probability of immunogenic tumor recognition, but neither is deterministic.
+- Gene-level mutation enrichment must be interpreted alongside event counts, FDR, and biology.
+- Low-frequency mutations may be mechanistically interesting, but they are not stable enough to promote without validation.
+- Immune-context estimates provide useful orthogonal support when they align with response and burden patterns.
+- A single retrospective cohort should generate hypotheses, not clinical decision rules.
 
-Install R package dependencies:
+## Documentation
 
-```r
-install.packages(c(
-  "dplyr",
-  "forcats",
-  "ggplot2",
-  "here",
-  "knitr",
-  "purrr",
-  "readr",
-  "rmarkdown",
-  "stringr",
-  "tibble",
-  "tidyr"
-))
-```
+- [Data source](docs/data_source.md)
+- [Methods](docs/methods.md)
+- [Interpretation guide](docs/interpretation_guide.md)
 
-Render the analysis:
+## Caveats
 
-```r
-rmarkdown::render("analysis/precision_oncology_enrichment.Rmd")
-```
-
-## Reviewer Notes
-
-This repository intentionally avoids claiming clinical actionability. A response-enriched mutation in a small cohort is a starting point for biological review, not a decision rule.
-
-The most important reviewer questions are:
-
-- Does the association survive multiple-testing correction?
-- Is the signal driven by low-frequency events?
-- Is the candidate associated with higher tumor mutational burden?
-- Does the direction of effect remain plausible after burden adjustment?
-- Is there external evidence connecting the gene to drug mechanism, DNA repair, immune response, or tumor biology?
-
-## Status
-
-The source workflow has been cleaned and syntax-checked. Final recomputation requires the original assessment data, which are intentionally excluded from the public repository.
+- Retrospective public cohort.
+- No external validation set included.
+- Response grouping collapses heterogeneous clinical categories.
+- Gene-level mutation presence does not prove functional impact.
+- cBioPortal-derived values may differ from publication-specific preprocessing.
+- No clinical actionability is claimed.
 

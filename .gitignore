@@ -1,4 +1,6 @@
 .DS_Store
+__pycache__/
+*.pyc
 .Rhistory
 .RData
 .Rproj.user/
@@ -9,5 +11,9 @@ vanallen-assessment/
 *.tsv
 *.csv
 !README.md
+!data/derived/*.csv
+!results/tables/*.csv
 analysis/*.html
 analysis/*.pdf
+data/raw/
+*.zip
