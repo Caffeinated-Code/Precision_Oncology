@@ -1,88 +1,117 @@
 # Precision Oncology Mutation Enrichment
 
-Exploratory whole-exome/MAF analysis of somatic mutations associated with drug response. The project was originally completed as a compact coding assessment and has been reframed as a clean, reviewable precision-oncology workflow.
+Exploratory WES/MAF analysis for identifying somatic mutation features associated with drug response.
 
-## Executive Summary
+This repository presents a compact precision-oncology case study: given tumor mutation calls and binary response annotations, build a defensible mutation-enrichment workflow that separates plausible biomarker signals from artifacts driven by sparse events, large genes, and tumor mutational burden.
 
-This analysis evaluates whether nonsynonymous somatic mutations are enriched in responders versus non-responders. The original knitted report analyzed 50 samples split evenly between responders and non-responders and reported `ERCC2` as the most enriched candidate gene.
+## Executive Takeaway
 
-The updated workflow treats that result as **hypothesis-generating**, not definitive. It adds safeguards expected in an oncology genomics review:
+The legacy rendered analysis in this repository reported `ERCC2` as the top response-associated candidate in a 50-sample cohort split evenly between responders and non-responders.
 
-- corrected large-gene/FLAGS reporting
-- gene-level Fisher exact tests for small cohorts
-- multiple-testing correction
-- explicit low-frequency mutation handling
-- mutation burden comparison using robust statistics
-- sensitivity modeling for mutation burden as a potential confounder
-- clear assumptions and data requirements
+The updated workflow does **not** treat that as a validated biomarker. It reframes the result as a candidate association that must be evaluated against:
+
+- event frequency and sparse-count instability
+- multiple hypothesis testing
+- large-gene recurrence artifacts
+- tumor mutational burden as a possible confounder
+- independent biological and clinical validation
+
+That distinction is the point of the project: the analysis is designed to look like something an oncology bioinformatics team could review, challenge, and extend.
+
+## Scientific Question
+
+> Are any nonsynonymous somatic mutations enriched in responders compared with non-responders, and do those associations remain credible after accounting for mutation frequency, multiple testing, and mutation burden?
 
 ## Why This Matters
 
-In precision oncology, a mutation-response association is only useful if the analysis separates signal from artifacts. Small cohorts, sparse mutation events, highly mutated tumors, and large recurrently mutated genes can all produce misleading findings.
+Small precision-oncology cohorts are common in translational settings. They are also statistically fragile. A mutation-response association can be distorted by:
 
-This repository shows how to approach a small WES/MAF response-enrichment problem with appropriate caution:
+- one or two low-frequency events
+- genes that recur because they are large or mutable
+- unequal tumor mutational burden across response groups
+- variant-level counting instead of sample-level mutation presence
+- unadjusted p-values across thousands of genes
+
+This workflow makes those risks explicit.
 
 ```mermaid
 flowchart LR
-    A["MAF files"] --> B["Nonsynonymous variants"]
-    B --> C["Gene x sample mutation matrix"]
-    C --> D["Responder vs non-responder enrichment"]
-    D --> E["Frequency tiers + FDR review"]
-    E --> F["Mutation burden sensitivity"]
-    F --> G["Candidate biomarker hypotheses"]
+    A["Somatic MAF files"] --> B["Nonsynonymous variants"]
+    B --> C["Sample x gene mutation matrix"]
+    C --> D["Responder vs non-responder Fisher tests"]
+    D --> E["Frequency tiers + FDR"]
+    E --> F["TMB comparison"]
+    F --> G["Burden-adjusted sensitivity model"]
+    G --> H["Candidate biomarker interpretation"]
 ```
 
-## Current Result From The Existing Knitted Report
+## What Was Improved
 
-The committed knitted report previously produced these headline observations:
+The current analysis source in [analysis/precision_oncology_enrichment.Rmd](analysis/precision_oncology_enrichment.Rmd) implements a more reviewable workflow:
 
-- 50 samples: 25 responders and 25 non-responders
-- top recurrently mutated genes included `TTN`, `TP53`, `MUC16`, `ERBB4`, `KMT2D`, `ERBB3`, `RB1`, `ERCC2`, and `PIK3CA`
-- `ERCC2` was reported as the most significantly enriched gene
-- `ERCC2` mutant samples: 9
-- `ERCC2` wild-type samples: 41
-- reported mean nonsynonymous mutations per Mb:
-  - `ERCC2` mutant: 10.67
-  - `ERCC2` wild-type: 5.05
+- sample-level gene mutation presence, rather than raw variant counts alone
+- Fisher exact tests for small responder/non-responder contingency tables
+- Benjamini-Hochberg q-values for multiple testing
+- separate reporting for primary-screen, low-frequency, and singleton events
+- corrected large-gene/FLAGS annotation logic
+- nonparametric mutation-burden comparison
+- logistic sensitivity model including mutation burden
+- explicit assumptions, input checks, and cautious interpretation
 
-These observations need to be interpreted carefully because mutation burden may be related to both DNA repair biology and response. The updated source analysis explicitly checks this issue.
+## Current Legacy Result
 
-## Important Corrections
+The archived rendered output from the original assessment reported:
 
-The original script contained a FLAGS reporting bug:
+| Quantity | Reported value |
+|---|---:|
+| Samples | 50 |
+| Responders | 25 |
+| Non-responders | 25 |
+| Top candidate | `ERCC2` |
+| `ERCC2` mutant samples | 9 |
+| `ERCC2` wild-type samples | 41 |
+| Mean nonsynonymous mutations/Mb, `ERCC2` mutant | 10.67 |
+| Mean nonsynonymous mutations/Mb, `ERCC2` wild-type | 5.05 |
 
-```r
-top15[flags %in% top15]
+Interpretation: `ERCC2` is biologically plausible because nucleotide excision repair alterations can affect DNA damage biology and mutation burden. In this cohort, however, the result should be treated as hypothesis-generating until it is reproduced with the updated workflow and validated externally.
+
+## Repository Layout
+
+```text
+.
+├── README.md
+├── analysis/
+│   └── precision_oncology_enrichment.Rmd
+└── archive/
+    └── legacy-output/
+        ├── Knitted_Report.html
+        └── README.pdf
 ```
 
-That expression indexes the top-15 gene vector using a logical vector derived from the FLAGS list. The corrected logic is:
-
-```r
-intersect(top15, flags)
-```
-
-This matters because genes such as `TP53` and `KMT2D` should not be reported as FLAGS based on the FLAGS list used in the script.
-
-The updated analysis also avoids treating nominal low-frequency hits as validated biomarkers. Genes mutated in only one or two samples can be interesting, but they require separate reporting and external validation.
-
-## Repository Contents
-
-- `Raw_Code.Rmd`: updated, reviewable R Markdown analysis workflow
-- `Knitted_Report.html`: legacy knitted report from the original assessment
-- `README.pdf`: legacy PDF output from the original assessment
-
-The data are not committed to this repository. The workflow expects:
+The assessment data are not committed. The analysis expects:
 
 ```text
 vanallen-assessment/
-  mafs/
-    *.maf
-  sample-information.tsv
+├── mafs/
+│   └── *.maf
+└── sample-information.tsv
 ```
 
-## Reproducibility
+Required clinical columns:
 
-Install the required R packages:
+- `Tumor_Sample_Barcode`
+- `Response`
+- `Nonsynonymous_mutations_per_Mb`
+
+Required MAF columns:
+
+- `Hugo_Symbol`
+- `Tumor_Sample_Barcode`
+- `Variant_Classification`
+
+## Reproduce The Analysis
+
+Install R package dependencies:
 
 ```r
 install.packages(c(
@@ -100,25 +129,25 @@ install.packages(c(
 ))
 ```
 
-Then knit:
+Render the analysis:
 
 ```r
-rmarkdown::render("Raw_Code.Rmd")
+rmarkdown::render("analysis/precision_oncology_enrichment.Rmd")
 ```
 
-## Analysis Philosophy
+## Reviewer Notes
 
-This is the standard used in the updated workflow:
+This repository intentionally avoids claiming clinical actionability. A response-enriched mutation in a small cohort is a starting point for biological review, not a decision rule.
 
-- Start from sample-level mutation presence, not raw variant count alone.
-- Use Fisher exact tests for sparse mutation-response tables.
-- Report multiple-testing-adjusted q-values.
-- Separate primary-screen genes from low-frequency findings.
-- Treat mutation burden as a possible confounder.
-- Keep biological interpretation proportional to cohort size.
+The most important reviewer questions are:
 
-## Interpretation For Reviewers
+- Does the association survive multiple-testing correction?
+- Is the signal driven by low-frequency events?
+- Is the candidate associated with higher tumor mutational burden?
+- Does the direction of effect remain plausible after burden adjustment?
+- Is there external evidence connecting the gene to drug mechanism, DNA repair, immune response, or tumor biology?
 
-The project demonstrates practical oncology bioinformatics judgment: it does not just produce a significant p-value, it asks whether that signal could be affected by sample size, low-frequency events, large genes, or tumor mutational burden.
+## Status
 
-`ERCC2` remains a biologically plausible candidate because DNA repair alterations can affect mutation burden and treatment sensitivity. However, this repository frames the finding appropriately: a candidate association that should be validated, not a standalone clinical biomarker claim.
+The source workflow has been cleaned and syntax-checked. Final recomputation requires the original assessment data, which are intentionally excluded from the public repository.
+

@@ -1,6 +1,6 @@
 ---
 title: "Precision Oncology Mutation Enrichment Analysis"
-subtitle: "Exploratory WES/MAF analysis of response-associated somatic mutations"
+subtitle: "Response-associated somatic mutation screening with low-frequency and mutation-burden safeguards"
 output:
   html_document:
     toc: true
@@ -29,7 +29,7 @@ This is an exploratory precision-oncology analysis. Associations reported here s
 - The clinical file contains `Tumor_Sample_Barcode`, `Response`, and `Nonsynonymous_mutations_per_Mb`.
 - `Response` contains two response groups, expected to be `Responder` and `Non-Responder`.
 - Each `Tumor_Sample_Barcode` is treated as one analyzable tumor sample.
-- The repository does not include the assessment data; only the analysis workflow and previously knitted output are versioned.
+- The repository does not include the assessment data; only the analysis workflow and archived rendered output are versioned.
 
 ## Packages
 
@@ -201,6 +201,14 @@ tibble(
 For each gene, a 2 x 2 Fisher exact test compares mutation presence versus response group. This is appropriate for small sample sizes and sparse mutation counts.
 
 Low-frequency mutations are reported but separated from the primary screen because singletons and doubletons can create unstable odds ratios.
+
+Operational tiers:
+
+- `primary_screen`: gene mutated in at least 5 samples.
+- `low_frequency`: gene mutated in 2-4 samples.
+- `singleton`: gene mutated in 1 sample.
+
+The threshold is intentionally conservative for a 50-sample cohort. It does not imply that lower-frequency events are unimportant; it prevents sparse nominal findings from being promoted as biomarker candidates without additional evidence.
 
 ```{r enrichment}
 response_levels <- levels(droplevels(analysis_samples$Response))

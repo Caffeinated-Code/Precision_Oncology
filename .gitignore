@@ -9,3 +9,5 @@ vanallen-assessment/
 *.tsv
 *.csv
 !README.md
+analysis/*.html
+analysis/*.pdf
