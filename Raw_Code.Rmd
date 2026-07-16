@@ -1,128 +1,438 @@
 ---
-title: "Liu Lab Coding Assessment"
+title: "Precision Oncology Mutation Enrichment Analysis"
+subtitle: "Exploratory WES/MAF analysis of response-associated somatic mutations"
 output:
-  html_document: default
-  pdf_document: default
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: readable
+  pdf_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+set.seed(20260716)
 ```
 
-1) Merging and Reading .maf files into "dfci" 
-```{r}
-library(maftools)   #For analying .maf files
-library(readr)      #Easy to use write.tsv() function available
-library(here)       #Set relative paths to current wd instead of retyping long direct path names
-basePath <- here("vanallen-assessment")  
-mafsPath <- paste(basePath, "mafs", sep = "/")
-mafFiles <- list.files(mafsPath)
-mafFilesPaths <- paste(mafsPath, mafFiles, sep = "/")
-#Merges .mafs and creates a sample_id column
-mergedMaf <- maftools:::merge_mafs(mafs = mafFilesPaths, MAFobj = FALSE) 
-#Path to merged .maf file
-dfci.maf <- paste(basePath, "somatic.snvs.maf", sep = "/") 
-write_tsv(mergedMaf, path = dfci.maf) 
-#Path to clinical information
-dfci.clin <- paste(basePath, "sample-information.tsv", sep = "/") 
-dfci = read.maf(maf = dfci.maf, clinicalData = dfci.clin, removeDuplicatedVariants = FALSE) #Retaining all variants
-```
+## Study question
 
+This analysis asks whether nonsynonymous somatic mutations are enriched in drug responders versus non-responders, using MAF files and sample-level clinical response annotations.
 
-2) Subset for mutations that are not of the Variant Classification “Silent”. 
-```{r}
-nonSyn_dfci <- read.maf(maf = subsetMaf(dfci, query = "Variant_Classification != 'Silent'"), clinicalData = dfci.clin, removeDuplicatedVariants = FALSE)
-```
+This is an exploratory precision-oncology analysis. Associations reported here should be interpreted as candidate hypotheses unless validated in an independent cohort or supported by orthogonal clinical and biological evidence.
 
+## Assumptions
 
-3) Find the 15 most common mutations
-```{r}
-#Source = https://rdrr.io/bioc/maftools/src/R/summarizeMaf.R
-#Top 20 FLAGS - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4267152/
-geneCloud(nonSyn_dfci, top = 15)
-flags = c("TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", "MUC5B",
-          "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", "LAMA5", "AHNAK",
-          "HMCN1", "USH2A", "DNAH11", "MACF1", "MUC17")
-top15 <- nonSyn_dfci@gene.summary[1:15, "Hugo_Symbol"][[1]]
-cat("Top 15 commonly mutated genes: ", top15, "\n")
-cat("Possible flags in top 15 commonly mutated genes: ",  top15[flags %in% top15], "\n")
-top15MuInfo <- cbind(nonSyn_dfci@data$Hugo_Symbol[which(nonSyn_dfci@data$Hugo_Symbol %in% top15)], nonSyn_dfci@data$Protein_Change[which(nonSyn_dfci@data$Hugo_Symbol %in% top15)])
-colnames(top15MuInfo) <- c("Hugo_Symbol", "Protein_Change")
-cat("Top 15 common mutations with associated protein changes (First 10)\n")
-head(top15MuInfo, 10)
-```
+- Input data are available under `vanallen-assessment/`.
+- MAF files are stored in `vanallen-assessment/mafs/`.
+- Clinical annotations are stored in `vanallen-assessment/sample-information.tsv`.
+- The clinical file contains `Tumor_Sample_Barcode`, `Response`, and `Nonsynonymous_mutations_per_Mb`.
+- `Response` contains two response groups, expected to be `Responder` and `Non-Responder`.
+- Each `Tumor_Sample_Barcode` is treated as one analyzable tumor sample.
+- The repository does not include the assessment data; only the analysis workflow and previously knitted output are versioned.
 
-4) Perform a statistical test to explore if any mutated genes are enriched in patients who either responded or not
-```{r}
-#Null Hypothesis: Genes acquire mutations equally likely in both responders and non responders
-enrichmentRes <- clinicalEnrichment(nonSyn_dfci, clinicalFeature = "Response")
-#Plots only significantly enriched mutated genes
-plotEnrichmentResults(enrichmentRes, pVal = 0.05, cols = NULL,
-                      annoFontSize = 0.9, geneFontSize = 0.8, legendFontSize = 0.8,
-                      showTitle = FALSE)
-title (main = "Gene-Responsiveness Associations", ylab = "Sample Fraction associated with Responses", xlab = "Enriched Genes", line = 2.2)
-#Bars are annotated with the ratio of mutated samples to total samples
+## Packages
 
+```{r packages}
+required_packages <- c(
+  "dplyr",
+  "forcats",
+  "ggplot2",
+  "here",
+  "knitr",
+  "purrr",
+  "readr",
+  "stringr",
+  "tibble",
+  "tidyr"
+)
 
-```
+missing_packages <- required_packages[
+  !vapply(required_packages, requireNamespace, logical(1), quietly = TRUE)
+]
 
+if (length(missing_packages) > 0) {
+  stop(
+    "Install missing packages before knitting: ",
+    paste(missing_packages, collapse = ", ")
+  )
+}
 
-5) Create a scatter plot of genes with the number of mutated patients and your results from question 4. Can the axes be scaled or transformed in any way to improve readability? If so, recreate the plot using your suggestion(s).  
-```{r}
-enrichedGenes <- enrichmentRes$groupwise_comparision[p_value < 0.05, Hugo_Symbol]
-mutatedPatients <- nonSyn_dfci@gene.summary$MutatedSamples[which(nonSyn_dfci@gene.summary$Hugo_Symbol %in% enrichedGenes)]
-rawCount <- data.frame(enrichedGenes, mutatedPatients)
+library(dplyr)
+library(forcats)
 library(ggplot2)
-ggplot(rawCount, aes(x=mutatedPatients, y=enrichedGenes)) + geom_dotplot(stackdir = "center", binaxis = "y", method="histodot", binwidth = 0.5) + ggtitle("Raw Mutated Patient Count Vs Enriched Genes") + labs(x = "Raw Mutated Patient Count", y = "Enriched Genes")
-```
-Scaled Data
-```{r}
-totalMutations <- nonSyn_dfci@gene.summary$total[nonSyn_dfci@gene.summary$Hugo_Symbol %in% enrichedGenes] #Do not consider Tumor_Sample_Bracodes as same patient sample could be run with different barcodes
-# A single patient can have more than one mutation. 
-muFreq <- totalMutations/mutatedPatients
-muFreqTable <- data.frame(enrichedGenes, muFreq)
-ggplot(muFreqTable, aes(x=muFreq, y=enrichedGenes)) + geom_dotplot(stackdir = "center", binaxis = "y", method="histodot", binwidth = 0.5) + ggtitle("Mutation Frequency Vs Enriched Genes") + labs(x = "Mutation Frequency", y = "Enriched Genes")
-play <- data.frame(patientID = nonSyn_dfci@data$Tumor_Sample_Barcode[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes], enrichedGene = nonSyn_dfci@data$Hugo_Symbol[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes], response = nonSyn_dfci@clinical.data$Response[nonSyn_dfci@data$Tumor_Sample_Barcode[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes]])
-contigencytable <- table(play$enrichedGene, play$response)
-plot(contigencytable[,1]/totalMutations, type = "p", pch = 3, col = "red", main = "Scaled Data", xlab = "Enriched Genes", ylab = "Mutation Frequency", xaxt='n')
-points(contigencytable[,2]/totalMutations, pch = 6, col = "blue")
-axis(1, at = play$enrichedGene, labels = play$enrichedGene, cex.axis=0.6)
-legend("topright", legend=c("Non-Responder", "Responder"), col=c("red", "blue"), lty=1:2, cex=0.8)
+library(here)
+library(knitr)
+library(purrr)
+library(readr)
+library(stringr)
+library(tibble)
+library(tidyr)
 ```
 
+## Load and harmonize input data
 
-Detailed Oncoplot
-```{r}
-cat("Following oncoplot provides a more detailed description of the mutations in the enriched genes in each patient\n")
-oncostrip(nonSyn_dfci, genes = enrichedGenes)
+```{r load-data}
+base_path <- here("vanallen-assessment")
+mafs_path <- file.path(base_path, "mafs")
+clinical_path <- file.path(base_path, "sample-information.tsv")
+
+if (!dir.exists(mafs_path)) {
+  stop("MAF directory not found: ", mafs_path)
+}
+
+if (!file.exists(clinical_path)) {
+  stop("Clinical file not found: ", clinical_path)
+}
+
+maf_files <- list.files(mafs_path, pattern = "\\.maf(\\.gz)?$", full.names = TRUE)
+
+if (length(maf_files) == 0) {
+  stop("No .maf or .maf.gz files found under: ", mafs_path)
+}
+
+raw_maf <- maf_files |>
+  set_names(basename(maf_files)) |>
+  map_dfr(
+    ~ read_tsv(.x, comment = "#", show_col_types = FALSE),
+    .id = "source_maf"
+  )
+
+clinical <- read_tsv(clinical_path, show_col_types = FALSE)
+
+required_maf_cols <- c("Hugo_Symbol", "Tumor_Sample_Barcode", "Variant_Classification")
+required_clinical_cols <- c(
+  "Tumor_Sample_Barcode",
+  "Response",
+  "Nonsynonymous_mutations_per_Mb"
+)
+
+missing_maf_cols <- setdiff(required_maf_cols, colnames(raw_maf))
+missing_clinical_cols <- setdiff(required_clinical_cols, colnames(clinical))
+
+if (length(missing_maf_cols) > 0) {
+  stop("MAF is missing required columns: ", paste(missing_maf_cols, collapse = ", "))
+}
+
+if (length(missing_clinical_cols) > 0) {
+  stop("Clinical file is missing required columns: ", paste(missing_clinical_cols, collapse = ", "))
+}
+
+clinical <- clinical |>
+  mutate(
+    Response = factor(Response),
+    Nonsynonymous_mutations_per_Mb = as.numeric(Nonsynonymous_mutations_per_Mb)
+  )
+
+sample_summary <- clinical |>
+  count(Response, name = "n_samples")
+
+kable(sample_summary, caption = "Samples by response group")
 ```
 
-6) How many samples are wild-type versus mutant with respect to the most significantly enriched gene from Question 4?
-Plot the number of nonsynonymous mutations per megabase in the mutant vs. wild-type samples. Is there a significant difference in the number of mutations between the two groups?
-```{r}
-cat("Most significantly enriched gene: ",enrichedGenes[1],"\n")
-totalSamples <- nonSyn_dfci@clinical.data$Tumor_Sample_Barcode
-mutantSamples <- nonSyn_dfci@data$Tumor_Sample_Barcode[nonSyn_dfci@data$Hugo_Symbol %in% enrichedGenes[1]]
-wtSamples <- setdiff(totalSamples, mutantSamples)
-cat ("Number of", enrichedGenes[1],"mutant samples: ", length(mutantSamples), "\n")
-cat ("Number of ",enrichedGenes[1],"wild-type samples: ", length(wtSamples) )
+## Filter to nonsynonymous variants
 
-mutantBurden <- nonSyn_dfci@clinical.data$Nonsynonymous_mutations_per_Mb[nonSyn_dfci@clinical.data$Tumor_Sample_Barcode %in% mutantSamples]
-mutantBurden <- as.numeric(as.character(mutantBurden)) #Factor to number conversion
-wtBurden <- nonSyn_dfci@clinical.data$Nonsynonymous_mutations_per_Mb[nonSyn_dfci@clinical.data$Tumor_Sample_Barcode %in% wtSamples]
-wtBurden <- as.numeric(as.character(wtBurden))
-burden = c(mutantBurden,wtBurden)
-status = c(rep("Mutant", length(mutantBurden)), rep("Wt", length(wtBurden)))
-burdenData <- data.frame(status, burden)
+Silent variants are excluded before gene-level enrichment testing. A gene is considered mutated in a sample if at least one nonsynonymous variant is observed in that gene for that sample.
 
-#Test homoscedasticity before using t-test assuming homogeneous variances
-var.test(burdenData$burden~burdenData$status)
-#P value is greater than 0.5, meaning that we can assume that the variances of both groups are homogenous
-t.test(burdenData$burden~burdenData$status,var.equal = TRUE, alternative = "two.sided")
-#Mean nonsynonymous mutations per megabase in the mutant group is significantly different from that of the wild-type group
-t.test(burdenData$burden~burdenData$status,var.equal = TRUE, alternative = "greater")
-#Mean nonsynonymous mutations per megabase in the mutant group is significantly higher than that of the wild-type group
-library(ggpubr)
-ggboxplot(burdenData, x = "status", y ="burden",color = "status", palette = c("#00AFBB", "#E7B800"), order = c("Mutant", "Wt"), ylab = "Mutation Burden", xlab = "Patient Status")
+```{r filter-variants}
+nonsyn_maf <- raw_maf |>
+  filter(Variant_Classification != "Silent") |>
+  semi_join(clinical, by = "Tumor_Sample_Barcode")
+
+gene_sample <- nonsyn_maf |>
+  distinct(Tumor_Sample_Barcode, Hugo_Symbol)
+
+analysis_samples <- clinical |>
+  semi_join(
+    tibble(Tumor_Sample_Barcode = unique(raw_maf$Tumor_Sample_Barcode)),
+    by = "Tumor_Sample_Barcode"
+  )
+
+n_samples <- n_distinct(analysis_samples$Tumor_Sample_Barcode)
+n_genes <- n_distinct(nonsyn_maf$Hugo_Symbol)
+n_variants <- nrow(nonsyn_maf)
+
+tibble(
+  analyzable_samples = n_samples,
+  nonsynonymous_variants = n_variants,
+  genes_with_nonsynonymous_variants = n_genes
+) |>
+  kable(caption = "Analysis set after nonsynonymous filtering")
 ```
 
+## Most frequently mutated genes
+
+Large genes are often recurrently mutated because of size and mutability rather than disease-specific selection. The FLAGS list is used only as a cautionary label, not as an automatic exclusion rule.
+
+```{r top-genes}
+flags <- c(
+  "TTN", "MUC16", "OBSCN", "AHNAK2", "SYNE1", "FLG", "MUC5B",
+  "DNAH17", "PLEC", "DST", "SYNE2", "NEB", "HSPG2", "LAMA5",
+  "AHNAK", "HMCN1", "USH2A", "DNAH11", "MACF1", "MUC17"
+)
+
+gene_frequency <- gene_sample |>
+  count(Hugo_Symbol, name = "mutated_samples") |>
+  mutate(
+    mutation_prevalence = mutated_samples / n_samples,
+    flag_gene = Hugo_Symbol %in% flags
+  ) |>
+  arrange(desc(mutated_samples), Hugo_Symbol)
+
+top_15 <- gene_frequency |>
+  slice_head(n = 15)
+
+kable(top_15, digits = 3, caption = "Top 15 genes by mutated sample count")
+
+flagged_top_15 <- intersect(top_15$Hugo_Symbol, flags)
+
+tibble(
+  flagged_genes_in_top_15 = ifelse(
+    length(flagged_top_15) == 0,
+    "None",
+    paste(flagged_top_15, collapse = ", ")
+  )
+) |>
+  kable(caption = "Large-gene caution labels among the top 15")
+```
+
+## Gene-level enrichment by response
+
+For each gene, a 2 x 2 Fisher exact test compares mutation presence versus response group. This is appropriate for small sample sizes and sparse mutation counts.
+
+Low-frequency mutations are reported but separated from the primary screen because singletons and doubletons can create unstable odds ratios.
+
+```{r enrichment}
+response_levels <- levels(droplevels(analysis_samples$Response))
+
+if (length(response_levels) != 2) {
+  stop(
+    "Expected exactly two response groups for Fisher exact testing. Observed: ",
+    paste(response_levels, collapse = ", ")
+  )
+}
+
+preferred_responder_label <- "Responder"
+if (!preferred_responder_label %in% response_levels) {
+  preferred_responder_label <- response_levels[2]
+}
+
+test_gene <- function(gene_symbol) {
+  mutated_samples <- gene_sample |>
+    filter(Hugo_Symbol == gene_symbol) |>
+    pull(Tumor_Sample_Barcode)
+
+  test_df <- analysis_samples |>
+    mutate(
+      mutated = factor(
+        Tumor_Sample_Barcode %in% mutated_samples,
+        levels = c(FALSE, TRUE)
+      ),
+      Response = factor(Response, levels = response_levels)
+    )
+
+  contingency <- table(test_df$mutated, test_df$Response)
+  fisher_result <- fisher.test(contingency)
+
+  counts <- test_df |>
+    count(Response, mutated) |>
+    complete(Response, mutated = c(FALSE, TRUE), fill = list(n = 0)) |>
+    unite("response_mutated", Response, mutated, sep = "_") |>
+    pivot_wider(names_from = response_mutated, values_from = n)
+
+  tibble(
+    Hugo_Symbol = gene_symbol,
+    mutated_samples = length(mutated_samples),
+    odds_ratio = unname(fisher_result$estimate),
+    p_value = fisher_result$p.value,
+    responder_label = preferred_responder_label
+  ) |>
+    bind_cols(counts)
+}
+
+enrichment_results <- gene_frequency |>
+  pull(Hugo_Symbol) |>
+  map_dfr(test_gene) |>
+  mutate(
+    q_value = p.adjust(p_value, method = "BH"),
+    frequency_tier = case_when(
+      mutated_samples >= 5 ~ "primary_screen",
+      mutated_samples >= 2 ~ "low_frequency",
+      TRUE ~ "singleton"
+    )
+  ) |>
+  arrange(p_value, desc(mutated_samples), Hugo_Symbol)
+
+primary_screen <- enrichment_results |>
+  filter(frequency_tier == "primary_screen")
+
+low_frequency_findings <- enrichment_results |>
+  filter(frequency_tier != "primary_screen", p_value < 0.05)
+
+kable(
+  primary_screen |> slice_head(n = 20),
+  digits = 4,
+  caption = "Primary enrichment screen: genes mutated in at least five samples"
+)
+
+kable(
+  low_frequency_findings |> slice_head(n = 20),
+  digits = 4,
+  caption = "Low-frequency nominal findings: shown for review, not treated as definitive"
+)
+```
+
+```{r enrichment-plot, fig.width=8, fig.height=6}
+plot_df <- enrichment_results |>
+  filter(mutated_samples >= 2) |>
+  mutate(
+    neg_log10_p = -log10(p_value),
+    Hugo_Symbol = fct_reorder(Hugo_Symbol, neg_log10_p)
+  ) |>
+  slice_min(p_value, n = 30)
+
+ggplot(
+  plot_df,
+  aes(
+    x = mutated_samples,
+    y = neg_log10_p,
+    color = frequency_tier,
+    label = Hugo_Symbol
+  )
+) +
+  geom_point(size = 3, alpha = 0.85) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", color = "grey40") +
+  scale_x_continuous(trans = "log2") +
+  labs(
+    title = "Mutation-response enrichment screen",
+    subtitle = "Fisher exact tests; x-axis log2-scaled for readability",
+    x = "Mutated samples",
+    y = "-log10 nominal p-value",
+    color = "Frequency tier"
+  ) +
+  theme_minimal(base_size = 12)
+```
+
+## Inspect the top candidate
+
+The leading candidate is selected from the primary screen by nominal p-value. If no primary-screen gene is available, the report stops rather than over-interpreting low-frequency findings.
+
+```{r top-candidate}
+if (nrow(primary_screen) == 0) {
+  stop("No genes met the primary-screen frequency threshold.")
+}
+
+top_candidate <- primary_screen |>
+  slice_min(p_value, n = 1, with_ties = FALSE)
+
+top_gene <- top_candidate$Hugo_Symbol[[1]]
+
+kable(top_candidate, digits = 4, caption = "Top response-associated candidate")
+```
+
+```{r top-candidate-burden}
+top_mutant_samples <- gene_sample |>
+  filter(Hugo_Symbol == top_gene) |>
+  pull(Tumor_Sample_Barcode)
+
+burden_df <- analysis_samples |>
+  mutate(
+    mutation_status = if_else(
+      Tumor_Sample_Barcode %in% top_mutant_samples,
+      paste0(top_gene, " mutant"),
+      paste0(top_gene, " wild-type")
+    ),
+    mutation_status = factor(
+      mutation_status,
+      levels = c(paste0(top_gene, " mutant"), paste0(top_gene, " wild-type"))
+    )
+  ) |>
+  filter(!is.na(Nonsynonymous_mutations_per_Mb))
+
+burden_summary <- burden_df |>
+  group_by(mutation_status) |>
+  summarise(
+    n = n(),
+    median_tmb = median(Nonsynonymous_mutations_per_Mb),
+    mean_tmb = mean(Nonsynonymous_mutations_per_Mb),
+    iqr_tmb = IQR(Nonsynonymous_mutations_per_Mb),
+    .groups = "drop"
+  )
+
+burden_test <- wilcox.test(
+  Nonsynonymous_mutations_per_Mb ~ mutation_status,
+  data = burden_df,
+  exact = FALSE
+)
+
+kable(burden_summary, digits = 3, caption = "Mutation burden by top candidate status")
+
+tibble(
+  test = "Wilcoxon rank-sum",
+  p_value = burden_test$p.value
+) |>
+  kable(digits = 4, caption = "Mutation burden comparison")
+```
+
+```{r burden-plot, fig.width=7, fig.height=5}
+ggplot(
+  burden_df,
+  aes(x = mutation_status, y = Nonsynonymous_mutations_per_Mb, fill = mutation_status)
+) +
+  geom_boxplot(alpha = 0.55, outlier.shape = NA) +
+  geom_jitter(width = 0.12, alpha = 0.75, size = 2) +
+  labs(
+    title = paste("Mutation burden by", top_gene, "mutation status"),
+    x = NULL,
+    y = "Nonsynonymous mutations per Mb"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "none")
+```
+
+## Sensitivity: response association adjusted for mutation burden
+
+Mutation burden can confound response-associated gene findings, especially for DNA-repair genes or hypermutated samples. A small-sample logistic model is included as a sensitivity analysis, not as a definitive predictive model.
+
+```{r burden-adjusted-sensitivity}
+sensitivity_df <- analysis_samples |>
+  mutate(
+    response_binary = Response == preferred_responder_label,
+    top_gene_mutated = Tumor_Sample_Barcode %in% top_mutant_samples
+  ) |>
+  filter(!is.na(Nonsynonymous_mutations_per_Mb))
+
+glm_fit <- glm(
+  response_binary ~ top_gene_mutated + Nonsynonymous_mutations_per_Mb,
+  data = sensitivity_df,
+  family = binomial()
+)
+
+glm_summary <- summary(glm_fit)$coefficients |>
+  as.data.frame() |>
+  rownames_to_column("term") |>
+  as_tibble() |>
+  rename(
+    estimate = Estimate,
+    std_error = `Std. Error`,
+    z_value = `z value`,
+    p_value = `Pr(>|z|)`
+  )
+
+kable(
+  glm_summary,
+  digits = 4,
+  caption = "Sensitivity model: response association adjusted for mutation burden"
+)
+```
+
+## Interpretation
+
+The original knitted output reported `ERCC2` as the most significantly enriched gene, with 9 mutant samples and 41 wild-type samples. It also reported higher mean nonsynonymous mutations per Mb in the `ERCC2`-mutant group than in the wild-type group.
+
+This re-analysis keeps `ERCC2` as a candidate only if it remains significant under the primary frequency threshold and multiple-testing review. The key expert interpretation is cautious:
+
+- `ERCC2` is biologically plausible in treatment-response contexts because it participates in nucleotide excision repair.
+- Higher mutation burden among `ERCC2`-mutant samples may represent a biological mechanism, a confounder, or both.
+- Low-frequency mutations should be surfaced for review but not promoted as validated biomarkers.
+- Any responder-enriched gene from this cohort should be treated as hypothesis-generating until externally validated.

@@ -1,0 +1,11 @@
+.DS_Store
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+vanallen-assessment/
+*.maf
+*.maf.gz
+*.tsv
+*.csv
+!README.md
